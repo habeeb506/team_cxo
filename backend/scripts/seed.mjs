@@ -1,8 +1,12 @@
 #!/usr/bin/env node
 /**
  * Seeds local MongoDB with dummy data for the Dashboard's role-based
- * widgets: Users (dummy accounts + leaderboard participants), News
- * Bulletin, Tickets, Tasks, and Leaderboard snapshots.
+ * widgets (Users, News Bulletin, Tickets, Tasks, Leaderboard snapshots)
+ * and the Team Hierarchy org chart (an 8-level L1-L8 `cxo_teams`
+ * reporting structure -- see seeders/seedCxoTeams.mjs). Re-running this
+ * overwrites any `cxo_teams` data (including a real CSV import) the
+ * same way it does every other seeded collection -- see "Safe to
+ * re-run" below.
  *
  * Run with: npm run seed --prefix backend  (or `cd backend && npm run seed`)
  *
@@ -15,13 +19,14 @@
  *
  * Safe to re-run: every affected collection is fully cleared first.
  */
-import { NewsBulletin, Task, Ticket, User, LeaderboardEntry } from '../src/models/index.js';
+import { NewsBulletin, Task, Ticket, User, LeaderboardEntry, CxoTeam } from '../src/models/index.js';
 import { connectDB, disconnectDB } from '../src/config/db.js';
 
 import { seedUsers } from './seeders/seedUsers.mjs';
 import { seedNewsBulletins } from './seeders/seedNewsBulletins.mjs';
 import { seedTicketsAndTasks } from './seeders/seedTicketsAndTasks.mjs';
 import { seedLeaderboard } from './seeders/seedLeaderboard.mjs';
+import { seedCxoTeams } from './seeders/seedCxoTeams.mjs';
 
 async function clearCollections() {
   await Promise.all([
@@ -30,6 +35,7 @@ async function clearCollections() {
     Ticket.deleteMany({}),
     Task.deleteMany({}),
     LeaderboardEntry.deleteMany({}),
+    CxoTeam.deleteMany({}),
   ]);
 }
 
@@ -56,6 +62,12 @@ async function run() {
   console.log('Seeding leaderboard snapshots...');
   const entries = await seedLeaderboard(allUsers, primaryDemoUser);
   console.log(`  ${entries.length} leaderboard entries created.`);
+
+  console.log('Seeding CXO team hierarchy...');
+  const cxoTeamMembers = await seedCxoTeams();
+  const managingDirector = cxoTeamMembers.find((member) => member.level === 'L8');
+  console.log(`  ${cxoTeamMembers.length} team members created across levels L1-L8.`);
+  console.log(`  MD (L8): ${managingDirector.name} <${managingDirector.emailId}>`);
 
   console.log('\nSeed complete. Demo login accounts:');
   demoUsers.forEach((user) => {

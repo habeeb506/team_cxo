@@ -1,4 +1,3 @@
-import MachineIdentityBanner from '../components/dashboard/MachineIdentityBanner.jsx';
 import IndividualContributionPanel from '../components/dashboard/IndividualContributionPanel.jsx';
 import LeaderboardPanel from '../components/dashboard/LeaderboardPanel.jsx';
 import NewsBulletinPanel from '../components/dashboard/NewsBulletinPanel.jsx';
@@ -24,8 +23,6 @@ export default function DashboardPage() {
         <p className="text-sm text-slate-500">Overview of your workspace.</p>
       </div>
 
-      <MachineIdentityBanner />
-
       {isLoading && (
         <div className="flex justify-center py-12">
           <Spinner />
@@ -46,9 +43,9 @@ export default function DashboardPage() {
       )}
 
       {!isLoading && currentUser && (
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_1fr_340px]">
-          <IndividualContributionPanel key={currentUser._id} userId={currentUser._id} />
-          <LeaderboardPanel key={currentUser._id} />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_1fr_320px]">
+          <IndividualContributionPanel userId={currentUser._id} />
+          <LeaderboardPanel />
           <NewsBulletinPanel />
         </div>
       )}

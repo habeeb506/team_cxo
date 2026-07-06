@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { CheckSquare, Ticket as TicketIcon } from 'lucide-react';
 
 import Card from '../ui/Card.jsx';
@@ -39,9 +39,10 @@ const TABS = [
  * records. Scoped to `userId` via the `assignedTo` filter both
  * ticketApiService/taskApiService's backend routes accept.
  *
- * Rendered with `key={userId}` by the parent (see pages/DashboardPage.jsx)
- * so switching the mock "logged in as" user cleanly refetches for the
- * new person instead of needing manual filter-update plumbing.
+ * Stays mounted across a "logged in as" switch (see pages/DashboardPage.jsx)
+ * -- it reacts to `userId` changes by updating each `useApiResource`'s
+ * filters in place, so the same card refetches and re-renders its data
+ * instead of unmounting/remounting a new one.
  */
 export default function IndividualContributionPanel({ userId }) {
   const [activeTab, setActiveTab] = useState('tickets');
@@ -49,15 +50,26 @@ export default function IndividualContributionPanel({ userId }) {
   const {
     data: tickets,
     isLoading: isLoadingTickets,
+    setFilters: setTicketFilters,
   } = useApiResource(ticketApiService, {
     initialFilters: { assignedTo: userId },
     pageSize: FETCH_ALL_PAGE_SIZE,
   });
 
-  const { data: tasks, isLoading: isLoadingTasks } = useApiResource(taskApiService, {
+  const {
+    data: tasks,
+    isLoading: isLoadingTasks,
+    setFilters: setTaskFilters,
+  } = useApiResource(taskApiService, {
     initialFilters: { assignedTo: userId },
     pageSize: FETCH_ALL_PAGE_SIZE,
   });
+
+  useEffect(() => {
+    setTicketFilters({ assignedTo: userId });
+    setTaskFilters({ assignedTo: userId });
+    setActiveTab('tickets');
+  }, [userId, setTicketFilters, setTaskFilters]);
 
   const ticketOpenCount = useMemo(
     () => tickets.filter((ticket) => ticket.status === 'open' || ticket.status === 'in-progress').length,
@@ -71,7 +83,7 @@ export default function IndividualContributionPanel({ userId }) {
   const isTicketsTab = activeTab === 'tickets';
 
   return (
-    <Card title="Individual Contribution" className="flex h-full flex-col">
+    <Card title="Individual Contribution" className="flex h-full min-w-0 flex-col">
       <div className="grid grid-cols-2 gap-3">
         <KpiCard
           label="Tickets"

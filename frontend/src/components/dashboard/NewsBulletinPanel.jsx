@@ -35,7 +35,7 @@ export default function NewsBulletinPanel() {
   };
 
   return (
-    <Card title="News Bulletin" className="flex h-full flex-col">
+    <Card title="News Bulletin" className="flex h-full min-w-0 flex-col">
       {isLoading && (
         <div className="flex justify-center py-12">
           <Spinner />

@@ -41,7 +41,8 @@ above that list changes.
 | `components/layout/` | `Header`, `Sidebar`, `Footer` | The chrome around every internal page; a new nav item is one entry in `Sidebar.jsx` |
 | `components/management/` | `ManagementPage`, `ManagementToolbar`, `RecordFormModal`, `RecordViewModal`, `DynamicFormFields`, `ImportResultModal` | The generic, config-driven CRUD page -- see "Management pages" below |
 | `components/quickLinks/` | `QuickLinksGrid`, `QuickLinkCard` | The tile grid rendered on `pages/QuickLinksPage.jsx` -- see "Dashboard and mock identity" below for why this moved off Dashboard |
-| `components/dashboard/` | `MachineIdentityBanner`, `NewsBulletinPanel` + `NewsBulletinModal`, `IndividualContributionPanel`, `LeaderboardPanel`, `KpiCard` | Dashboard-only widgets -- see "Dashboard and mock identity" below |
+| `components/dashboard/` | `NewsBulletinPanel` + `NewsBulletinModal`, `IndividualContributionPanel`, `LeaderboardPanel`, `KpiCard` | Dashboard-only widgets -- see "Dashboard and mock identity" below |
+| `components/orgChart/` | `OrgChartView`, `OrgChartNode`, `OrgChartLegend`, `orgChartLayout.js`, `orgChartColors.js` | The Team Hierarchy page's org chart -- see "Team Hierarchy org chart" below |
 | `components/ErrorBoundary.jsx` | Catches render errors app-wide | One broken widget can't blank the whole app |
 | `features/<resource>/` | Per-resource config only -- `*.management.config.js` (columns, form fields, CSV mapping) and `*.constants.js` (option lists mirroring backend enums) -- currently `cxoTeams/`, `businessTeams/`, `cxoPermissions/` | Keeps `components/management/` purely generic while each module's actual shape (its fields, columns, CSV headers) lives next to each other |
 | `layouts/` | `MainLayout` (header + sidebar + content, for the internal app), `AuthLayout` (centered, for future login/signup) | A new page picks a layout in `routeConfig.js`; no new layout code needed |
@@ -95,6 +96,18 @@ Team Members, Business Teams, and Permissions are full CRUD pages (create, edit,
 
 Every future module (Tasks, Applications, Floor Leaders, ...) follows this same pattern: a `*.management.config.js`, a thin page, and -- only if the resource needs it -- a `mapRecordToFormValues`/`transformSubmitValues` override. `ManagementPage`, `useManagementPageState`, and the shared UI kit never change.
 
+## Team Hierarchy org chart
+
+`pages/TeamHierarchyPage.jsx` renders an Org Chart/Table view toggle above the same `cxo_teams` data: **Table** is the plain `ManagementPage` described above (passed `hideHeader` so the toggle's own title/description isn't duplicated by `ManagementPage`'s own); **Org Chart** (`components/orgChart/OrgChartView.jsx`, the default view) is a pannable, zoomable reporting-hierarchy chart built entirely from each record's existing `manager` self-reference -- no new backend endpoint or schema change.
+
+**Data fetch.** `OrgChartView` calls `utils/csv.js`'s `fetchAllRecords` -- the same "every page, not just one" helper CSV export already uses -- rather than a paginated `useApiResource`, since the whole roster (not one page of it) is needed to build the tree.
+
+**Layout** (`orgChartLayout.js`) is a small hand-rolled recursive algorithm rather than a graph-layout library, since a reporting hierarchy is always a strict tree: each leaf gets the next sequential x slot in alphabetical DFS order, and each parent's x is the midpoint of its children's x range (the standard "tidy tree" approach). Records whose `manager` is missing or invalid are treated as roots rather than dropped, so one bad manager reference can't silently remove a whole subtree from the chart.
+
+**Rendering** is `@xyflow/react` (a canvas library purpose-built for exactly this: mouse-drag pan and scroll/pinch zoom are its default canvas behavior, `<Controls />` adds zoom in/out/fit-view buttons, and `<MiniMap />` gives an at-a-glance view of the whole org while zoomed into one part of it). Each node is a custom `OrgChartNode` -- a small person card (avatar initials, name, designation, an `L1`-`L8` level badge) -- with an explicit `width`/`height` set on the node object itself (not just its own CSS): `<MiniMap>` draws from each node's *declared* size, not a post-mount DOM measurement, so a custom node type without one renders as an empty minimap.
+
+**Color-coding** (`orgChartColors.js`) follows the dataviz skill's categorical formula: nodes are color-accented (a left-border stripe only, never the text color) by `group` (department) -- never by `level`, since level is already encoded by vertical position and re-encoding it in color would spend the identity channel on something position already shows. Each distinct `group` value gets one of eight fixed-order, CVD-validated hues, assigned in alphabetical order so a group's color is stable across reloads/imports regardless of fetch order; `OrgChartLegend` is the required text-labeled "relief" so group identity never depends on color alone.
+
 ## Dashboard and mock identity
 
 Team Members, Business Teams, and Permissions moved to a dedicated **Quick Links** page/nav item (`pages/QuickLinksPage.jsx`, `constants/quickLinks.js`) so Dashboard could become a role-based landing view instead of a tile grid. `constants/routePaths.js`'s `modulePattern` and `pages/ModulePlaceholderPage.jsx` work exactly as before, just reached from Quick Links now.
@@ -105,7 +118,7 @@ Team Members, Business Teams, and Permissions moved to a dedicated **Quick Links
 
 **News Bulletin panel** (`components/dashboard/NewsBulletinPanel.jsx`) is lazy-loaded via `hooks/useInfiniteList.js` -- the accumulating-pagination counterpart to `useApiResource` (which replaces its page; this appends), reusable by any future activity/notification feed. Each item is clamped to 3 lines (Tailwind's `line-clamp-3`); "View more" opens `NewsBulletinModal.jsx` with the already-fetched full description -- no second request, since the list endpoint always returns the full text.
 
-**Individual Contribution panel** (`components/dashboard/IndividualContributionPanel.jsx`) fetches the current user's tickets and tasks once each (via `useApiResource` with `assignedTo` as a filter), derives both KPI cards and the tabbed table from that same fetched data, and is rendered with `key={userId}` by `DashboardPage` so switching the mock user cleanly remounts and refetches instead of needing manual filter-update plumbing.
+**Individual Contribution panel** (`components/dashboard/IndividualContributionPanel.jsx`) fetches the current user's tickets and tasks each via `useApiResource` with `assignedTo` as a filter, and derives both KPI cards and the tabbed table from that same fetched data. It stays mounted across a "logged in as" switch: a `useEffect` keyed on `userId` calls each `useApiResource`'s `setFilters` in place, so switching the mock user updates the same card's data (and resets its tab back to Tickets) instead of unmounting and remounting a new one.
 
 **Leaderboard panel** (`components/dashboard/LeaderboardPanel.jsx`) adds a date picker (`GET /leaderboard/dates`) and highlights/auto-scrolls to the current user's row. This needed two small, generic additions to `components/ui/DataTable.jsx`: optional `getRowClassName(row)` and `getRowRef(row)`, both no-ops unless passed -- any future table wanting per-row styling or a scroll-to target reuses the same props instead of a new table implementation.
 

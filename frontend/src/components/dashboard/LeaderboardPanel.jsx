@@ -63,7 +63,7 @@ export default function LeaderboardPanel() {
   return (
     <Card
       title="Leaderboard"
-      className="flex h-full flex-col"
+      className="flex h-full min-w-0 flex-col"
       actions={
         <Select
           aria-label="Snapshot date"

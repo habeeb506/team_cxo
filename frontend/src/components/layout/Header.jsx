@@ -15,15 +15,15 @@ export default function Header() {
   const { currentUser, demoAccounts, isLoading: isLoadingUsers, switchUser } = useCurrentUser();
 
   return (
-    <header className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4">
-      <span className="text-sm font-semibold text-slate-900">Technet</span>
-      <div className="flex items-center gap-4">
+    <header className="flex h-14 items-center justify-between gap-3 border-b border-slate-200 bg-white px-4">
+      <span className="shrink-0 text-sm font-semibold text-slate-900">Technet</span>
+      <div className="flex min-w-0 items-center gap-4">
         {!isLoadingUsers && demoAccounts.length > 0 && (
           <Select
             aria-label="Logged in as"
             value={currentUser?._id || ''}
             onChange={(event) => switchUser(event.target.value)}
-            className="py-1.5 text-xs"
+            className="max-w-[45vw] truncate py-1.5 text-xs sm:max-w-55"
             options={demoAccounts.map((account) => ({
               value: account._id,
               label: `${account.name} (${account.role})`,
@@ -32,7 +32,9 @@ export default function Header() {
         )}
         {isLoading && <Spinner size="sm" />}
         {!isLoading && identity && (
-          <span className="text-sm font-medium text-slate-600">{identity.username}</span>
+          <span className="hidden truncate text-sm font-medium text-slate-600 sm:inline">
+            {identity.username}
+          </span>
         )}
       </div>
     </header>

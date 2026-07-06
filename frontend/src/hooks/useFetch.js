@@ -4,12 +4,10 @@ import { getCached, setCached } from '../utils/apiCache.js';
 
 // In-flight request registry, keyed by cacheKey. Lets two components
 // that call useFetch with the same cacheKey at (roughly) the same time
-// -- e.g. Header and MachineIdentityBanner both resolving the machine
-// identity on the same Dashboard render -- share one network request
-// instead of firing a duplicate one before either has resolved (a
-// resolved-value TTL cache alone doesn't catch this: both callers would
-// still miss the cache simultaneously since neither has written to it
-// yet).
+// share one network request instead of firing a duplicate one before
+// either has resolved (a resolved-value TTL cache alone doesn't catch
+// this: both callers would still miss the cache simultaneously since
+// neither has written to it yet).
 const inFlightRequests = new Map();
 
 function dedupedFetch(cacheKey, fetcher) {

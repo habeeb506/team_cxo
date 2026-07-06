@@ -18,9 +18,12 @@ const defaultRowLabel = (row) => row?.name || row?.emailId || 'this record';
  * fields, csv, ...) and render <ManagementPage title=... columns={...}
  * config={config} />. Business Teams, Permissions, and every future
  * module reuse this exact component -- none of them re-implement
- * fetching, pagination, modals, or bulk actions.
+ * fetching, pagination, modals, or bulk actions. Pass `hideHeader` when
+ * a page renders its own title/description above a view switcher (see
+ * pages/TeamHierarchyPage.jsx's Org Chart/Table toggle) so the two
+ * views don't each show a duplicate heading.
  */
-export default function ManagementPage({ title, description, columns, filters = [], config }) {
+export default function ManagementPage({ title, description, columns, filters = [], config, hideHeader = false }) {
   const state = useManagementPageState(config);
   const getRowLabel = config.getRowLabel || defaultRowLabel;
 
@@ -44,10 +47,12 @@ export default function ManagementPage({ title, description, columns, filters = 
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-semibold text-slate-900">{title}</h1>
-        <p className="text-sm text-slate-500">{description}</p>
-      </div>
+      {!hideHeader && (
+        <div>
+          <h1 className="text-xl font-semibold text-slate-900">{title}</h1>
+          <p className="text-sm text-slate-500">{description}</p>
+        </div>
+      )}
 
       <Card>
         <ManagementToolbar
