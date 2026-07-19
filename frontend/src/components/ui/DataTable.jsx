@@ -4,11 +4,26 @@ import { cn } from '../../utils/cn.js';
 
 const defaultGetRowId = (row) => row.id ?? row._id;
 
+// Pins a column to the right edge of the table's own scroll container
+// (the `overflow-x-auto` div below) so it stays visible while every
+// other column scrolls underneath it -- used for the management pages'
+// View/Edit/Delete actions column (see components/management/ManagementPage.jsx),
+// which shouldn't disappear off-screen when a table has more data
+// columns than fit the viewport. `bg-white` keeps scrolled-under content
+// from showing through; `group-hover:bg-slate-50` on the body cell keeps
+// it in sync with the row's own hover background instead of looking
+// like a separate, unhovered strip.
+const STICKY_RIGHT_CLASSES = 'sticky right-0 z-10 bg-white shadow-[-8px_0_8px_-8px_rgba(15,23,42,0.15)]';
+
 /**
  * Generic tabular data renderer, driven entirely by a `columns` config
- * ({ key, header, render? }) and a `rows` array. This is the building
- * block every future list/report/dashboard table is built from —
- * no feature should hand-roll a <table>.
+ * ({ key, header, render?, sticky? }) and a `rows` array. This is the
+ * building block every future list/report/dashboard table is built
+ * from — no feature should hand-roll a <table>.
+ *
+ * A column with `sticky: 'right'` stays pinned to the right of the
+ * table's horizontal scroll area instead of scrolling away with the
+ * rest of the row -- see STICKY_RIGHT_CLASSES above.
  *
  * Optional row selection (for bulk actions): pass `selectable`,
  * `selectedIds` (a Set), `onToggleRow(id)`, and `onToggleAll()` — see
@@ -61,7 +76,10 @@ export default function DataTable({
               </th>
             )}
             {columns.map((column) => (
-              <th key={column.key} className="px-3 py-2 font-medium">
+              <th
+                key={column.key}
+                className={cn('px-3 py-2 font-medium', column.sticky === 'right' && STICKY_RIGHT_CLASSES)}
+              >
                 {column.header}
               </th>
             ))}
@@ -74,7 +92,7 @@ export default function DataTable({
               <tr
                 key={rowId}
                 ref={getRowRef ? getRowRef(row) : undefined}
-                className={cn('border-b border-slate-100', 'hover:bg-slate-50', getRowClassName?.(row))}
+                className={cn('group border-b border-slate-100', 'hover:bg-slate-50', getRowClassName?.(row))}
               >
                 {selectable && (
                   <td className="px-3 py-2">
@@ -87,7 +105,13 @@ export default function DataTable({
                   </td>
                 )}
                 {columns.map((column) => (
-                  <td key={column.key} className="px-3 py-2 text-slate-700">
+                  <td
+                    key={column.key}
+                    className={cn(
+                      'px-3 py-2 text-slate-700',
+                      column.sticky === 'right' && cn(STICKY_RIGHT_CLASSES, 'group-hover:bg-slate-50'),
+                    )}
+                  >
                     {column.render ? column.render(row) : row[column.key]}
                   </td>
                 ))}

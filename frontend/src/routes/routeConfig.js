@@ -3,6 +3,7 @@ import QuickLinksPage from '../pages/QuickLinksPage.jsx';
 import TeamHierarchyPage from '../pages/TeamHierarchyPage.jsx';
 import BusinessTeamsPage from '../pages/BusinessTeamsPage.jsx';
 import PermissionsPage from '../pages/PermissionsPage.jsx';
+import TasksPage from '../pages/TasksPage.jsx';
 import ModulePlaceholderPage from '../pages/ModulePlaceholderPage.jsx';
 import RootRedirect from './RootRedirect.jsx';
 import MainLayout from '../layouts/MainLayout.jsx';
@@ -25,6 +26,7 @@ const routeConfig = [
       { path: ROUTE_PATHS.teamHierarchy, element: TeamHierarchyPage },
       { path: ROUTE_PATHS.businessTeams, element: BusinessTeamsPage },
       { path: ROUTE_PATHS.permissions, element: PermissionsPage },
+      { path: ROUTE_PATHS.tasks, element: TasksPage },
       { path: ROUTE_PATHS.modulePattern, element: ModulePlaceholderPage },
     ],
   },

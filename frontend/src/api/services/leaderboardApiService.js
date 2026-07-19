@@ -9,13 +9,23 @@ import httpClient from '../httpClient.js';
  * update/delete over records.
  */
 class LeaderboardApiService {
-  /** All ranked entries for a date (defaults to the latest snapshot). */
-  async getEntries(date) {
-    const { data } = await httpClient.get('/v1/leaderboard/entries', { params: date ? { date } : {} });
+  /**
+   * Ranked entries for a period. Pass `{ date }` for a specific
+   * snapshot, or `{ year, month }` (month optional) for the Dashboard's
+   * Year/Month filter -- the backend resolves that period's most recent
+   * snapshot (see LeaderboardService.getEntriesForPeriod). No args
+   * falls back to the latest snapshot overall.
+   */
+  async getEntries({ date, year, month } = {}) {
+    const params = {};
+    if (date) params.date = date;
+    if (year) params.year = year;
+    if (month) params.month = month;
+    const { data } = await httpClient.get('/v1/leaderboard/entries', { params });
     return data; // { success, data: entries[], date }
   }
 
-  /** Every snapshot date available, most recent first -- for the date picker. */
+  /** Every snapshot date available, most recent first. */
   async getDates() {
     const { data } = await httpClient.get('/v1/leaderboard/dates');
     return data; // { success, data: string[] }

@@ -37,8 +37,14 @@ export const JOB_TITLES_BY_ROLE = {
  * deterministic slice -- guarantees uniqueness up to
  * FIRST_NAMES.length * LAST_NAMES.length combinations (1,960 here),
  * far more than any seed size this app uses.
+ *
+ * `offset` takes a different slice of the same deterministic shuffle,
+ * so separate seeders (users, cxo_teams, business_teams -- different
+ * collections, no shared uniqueness constraint) each get a distinct,
+ * non-overlapping set of names/emails rather than accidentally
+ * generating the same roster for each one.
  */
-export function buildNamePool(count) {
+export function buildNamePool(count, offset = 0) {
   const pairs = [];
   for (const first of FIRST_NAMES) {
     for (const last of LAST_NAMES) {
@@ -46,8 +52,10 @@ export function buildNamePool(count) {
     }
   }
 
-  if (count > pairs.length) {
-    throw new Error(`Requested ${count} unique names but only ${pairs.length} combinations are available`);
+  if (offset + count > pairs.length) {
+    throw new Error(
+      `Requested ${count} unique names at offset ${offset} but only ${pairs.length} combinations are available`,
+    );
   }
 
   // Deterministic shuffle (fixed seed) so re-running the seed script
@@ -64,8 +72,8 @@ export function buildNamePool(count) {
     [seeded[i], seeded[j]] = [seeded[j], seeded[i]];
   }
 
-  return seeded.slice(0, count).map(({ first, last }, index) => ({
+  return seeded.slice(offset, offset + count).map(({ first, last }, index) => ({
     name: `${first} ${last}`,
-    email: `${first}.${last}.${index}@sample.com`.toLowerCase(),
+    email: `${first}.${last}.${offset + index}@sample.com`.toLowerCase(),
   }));
 }

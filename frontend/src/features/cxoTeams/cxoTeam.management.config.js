@@ -1,12 +1,37 @@
 import { CXO_TEAM_STATUS_OPTIONS } from './cxoTeam.constants.js';
 
-/** Table columns for the Team Members management page. */
+const formatDate = (value) => (value ? new Date(value).toLocaleDateString() : '—');
+
+/**
+ * Table columns for the Team Members management page -- every business
+ * field the `cxo_teams` document has (see backend/src/models/CxoTeam.model.js),
+ * not just a handful. Internal-only fields (isDeleted, deletedAt,
+ * createdBy, updatedBy, schemaVersion, metadata) are intentionally left
+ * out -- they exist for soft-delete/audit plumbing (see
+ * models/plugins/auditableSchema.plugin.js), not anything a Team
+ * Members viewer needs to see, and are always empty until real
+ * authentication exists anyway. `lead`/`manager` render the referenced
+ * member's name because CxoTeamService.list/getById populates them
+ * (see backend/src/services/CxoTeamService.js) instead of returning a
+ * raw ObjectId.
+ */
 export const CXO_TEAM_COLUMNS = [
   { key: 'name', header: 'Name' },
   { key: 'emailId', header: 'Email' },
+  { key: 'empIdNew', header: 'Employee ID' },
+  { key: 'empIdOld', header: 'Legacy ID', render: (row) => row.empIdOld || '—' },
   { key: 'designation', header: 'Designation' },
-  { key: 'group', header: 'Group' },
-  { key: 'status', header: 'Status' },
+  { key: 'level', header: 'Level', render: (row) => row.level || '—' },
+  { key: 'group', header: 'Group', render: (row) => row.group || '—' },
+  { key: 'location', header: 'Location', render: (row) => row.location || '—' },
+  { key: 'place', header: 'Place', render: (row) => row.place || '—' },
+  { key: 'profilePicture', header: 'Profile Picture', render: (row) => row.profilePicture || '—' },
+  { key: 'lead', header: 'Lead', render: (row) => row.lead?.name || '—' },
+  { key: 'manager', header: 'Manager', render: (row) => row.manager?.name || '—' },
+  { key: 'status', header: 'Status', render: (row) => (row.status || '').replace('-', ' ') },
+  { key: 'joiningDate', header: 'Joining Date', render: (row) => formatDate(row.joiningDate) },
+  { key: 'createdAt', header: 'Created', render: (row) => formatDate(row.createdAt) },
+  { key: 'updatedAt', header: 'Updated', render: (row) => formatDate(row.updatedAt) },
 ];
 
 /** Toolbar filter dropdowns. */

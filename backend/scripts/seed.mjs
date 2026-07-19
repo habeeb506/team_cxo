@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
  * Seeds local MongoDB with dummy data for the Dashboard's role-based
- * widgets: Users (dummy accounts + leaderboard participants), News
- * Bulletin, Tickets, Tasks, and Leaderboard snapshots.
+ * widgets (Users, News Bulletin, Tickets, Tasks, Leaderboard snapshots)
+ * and the management pages (Team Members, Business Teams, Permissions).
  *
  * Run with: npm run seed --prefix backend  (or `cd backend && npm run seed`)
  *
@@ -15,13 +15,25 @@
  *
  * Safe to re-run: every affected collection is fully cleared first.
  */
-import { NewsBulletin, Task, Ticket, User, LeaderboardEntry } from '../src/models/index.js';
+import {
+  NewsBulletin,
+  Task,
+  Ticket,
+  User,
+  LeaderboardEntry,
+  CxoTeam,
+  BusinessTeam,
+  CxoPermission,
+} from '../src/models/index.js';
 import { connectDB, disconnectDB } from '../src/config/db.js';
 
 import { seedUsers } from './seeders/seedUsers.mjs';
 import { seedNewsBulletins } from './seeders/seedNewsBulletins.mjs';
 import { seedTicketsAndTasks } from './seeders/seedTicketsAndTasks.mjs';
 import { seedLeaderboard } from './seeders/seedLeaderboard.mjs';
+import { seedCxoTeams } from './seeders/seedCxoTeams.mjs';
+import { seedBusinessTeams } from './seeders/seedBusinessTeams.mjs';
+import { seedCxoPermissions } from './seeders/seedCxoPermissions.mjs';
 
 async function clearCollections() {
   await Promise.all([
@@ -30,6 +42,9 @@ async function clearCollections() {
     Ticket.deleteMany({}),
     Task.deleteMany({}),
     LeaderboardEntry.deleteMany({}),
+    CxoTeam.deleteMany({}),
+    BusinessTeam.deleteMany({}),
+    CxoPermission.deleteMany({}),
   ]);
 }
 
@@ -56,6 +71,18 @@ async function run() {
   console.log('Seeding leaderboard snapshots...');
   const entries = await seedLeaderboard(allUsers, primaryDemoUser);
   console.log(`  ${entries.length} leaderboard entries created.`);
+
+  console.log('Seeding cxo_teams (leadership hierarchy)...');
+  const { all: teamMembers, ceo, directors, managers } = await seedCxoTeams();
+  console.log(`  ${teamMembers.length} team members created (1 CEO, ${directors.length} directors, ${managers.length} managers, ${teamMembers.length - 1 - directors.length - managers.length} individual contributors).`);
+
+  console.log('Seeding business_teams...');
+  const businessTeamMembers = await seedBusinessTeams();
+  console.log(`  ${businessTeamMembers.length} business team members created.`);
+
+  console.log('Seeding cxo_permissions...');
+  const permissions = await seedCxoPermissions({ ceo, directors, managers });
+  console.log(`  ${permissions.length} permission grants created.`);
 
   console.log('\nSeed complete. Demo login accounts:');
   demoUsers.forEach((user) => {

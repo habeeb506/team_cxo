@@ -14,3 +14,22 @@ export function toUtcDateOnly(input) {
 export function formatUtcDateOnly(date) {
   return new Date(date).toISOString().slice(0, 10);
 }
+
+/**
+ * Returns the [start, end) UTC Date range for one calendar month (when
+ * `month` is a 1-12 number) or, if `month` is omitted, one whole
+ * calendar year. Used to turn a `?year=&month=` dashboard filter into a
+ * single Mongo range query ($gte start, $lt end) against a timestamp
+ * field -- see utils/queryOptions.js's `dateRangeField` option.
+ */
+export function getUtcMonthRange(year, month) {
+  const y = Number(year);
+  if (typeof month === 'number' && !Number.isNaN(month)) {
+    const start = new Date(Date.UTC(y, month - 1, 1));
+    const end = new Date(Date.UTC(y, month, 1));
+    return { start, end };
+  }
+  const start = new Date(Date.UTC(y, 0, 1));
+  const end = new Date(Date.UTC(y + 1, 0, 1));
+  return { start, end };
+}

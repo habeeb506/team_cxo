@@ -1,15 +1,17 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { CheckSquare, Ticket as TicketIcon } from 'lucide-react';
 
 import Card from '../ui/Card.jsx';
 import DataTable from '../ui/DataTable.jsx';
 import StatusBadge from '../ui/StatusBadge.jsx';
 import useApiResource from '../../hooks/useApiResource.js';
+import useYearMonthFilter from '../../hooks/useYearMonthFilter.js';
 import ticketApiService from '../../api/services/ticketApiService.js';
 import taskApiService from '../../api/services/taskApiService.js';
 import { formatDateOnly } from '../../utils/formatDate.js';
 
 import KpiCard from './KpiCard.jsx';
+import YearMonthFilter from './YearMonthFilter.jsx';
 
 const FETCH_ALL_PAGE_SIZE = 100; // comfortably above the ~20/10 seeded per user
 
@@ -37,7 +39,10 @@ const TABS = [
  * Dashboard's Individual Contribution section: two KPI cards (Tickets,
  * Tasks) plus a tabbed, scrollable table of the current user's own
  * records. Scoped to `userId` via the `assignedTo` filter both
- * ticketApiService/taskApiService's backend routes accept.
+ * ticketApiService/taskApiService's backend routes accept, and further
+ * narrowed by the shared Year/Month filter (tickets/tasks `createdAt`
+ * -- see hooks/useYearMonthFilter.js and dateRangeField in
+ * backend/src/controllers/ticket.controller.js + task.controller.js).
  *
  * Rendered with `key={userId}` by the parent (see pages/DashboardPage.jsx)
  * so switching the mock "logged in as" user cleanly refetches for the
@@ -45,19 +50,30 @@ const TABS = [
  */
 export default function IndividualContributionPanel({ userId }) {
   const [activeTab, setActiveTab] = useState('tickets');
+  const { year, month, setYear, setMonth, params } = useYearMonthFilter();
 
   const {
     data: tickets,
     isLoading: isLoadingTickets,
+    setFilters: setTicketFilters,
   } = useApiResource(ticketApiService, {
     initialFilters: { assignedTo: userId },
     pageSize: FETCH_ALL_PAGE_SIZE,
   });
 
-  const { data: tasks, isLoading: isLoadingTasks } = useApiResource(taskApiService, {
+  const {
+    data: tasks,
+    isLoading: isLoadingTasks,
+    setFilters: setTaskFilters,
+  } = useApiResource(taskApiService, {
     initialFilters: { assignedTo: userId },
     pageSize: FETCH_ALL_PAGE_SIZE,
   });
+
+  useEffect(() => {
+    setTicketFilters({ assignedTo: userId, ...params });
+    setTaskFilters({ assignedTo: userId, ...params });
+  }, [userId, params, setTicketFilters, setTaskFilters]);
 
   const ticketOpenCount = useMemo(
     () => tickets.filter((ticket) => ticket.status === 'open' || ticket.status === 'in-progress').length,
@@ -71,7 +87,11 @@ export default function IndividualContributionPanel({ userId }) {
   const isTicketsTab = activeTab === 'tickets';
 
   return (
-    <Card title="Individual Contribution" className="flex h-full flex-col">
+    <Card
+      title="Individual Contribution"
+      className="flex h-full flex-col"
+      actions={<YearMonthFilter year={year} month={month} onYearChange={setYear} onMonthChange={setMonth} />}
+    >
       <div className="grid grid-cols-2 gap-3">
         <KpiCard
           label="Tickets"

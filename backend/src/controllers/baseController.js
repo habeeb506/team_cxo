@@ -21,7 +21,7 @@ import { sendSuccess } from '../utils/apiResponse.js';
  *   });
  */
 export function createCrudController(service, listQueryConfig = {}) {
-  const { allowedFilters = [], searchableFields = [] } = listQueryConfig;
+  const { allowedFilters = [], searchableFields = [], dateRangeField } = listQueryConfig;
 
   return {
     create: asyncHandler(async (req, res) => {
@@ -33,6 +33,7 @@ export function createCrudController(service, listQueryConfig = {}) {
       const { page, limit, sort, filter } = buildListQueryOptions(req.query, {
         allowedFilters,
         searchableFields,
+        dateRangeField,
       });
       const { data, pagination } = await service.list({ page, limit, sort, filter });
       sendSuccess(res, HTTP_STATUS.OK, data, { pagination });

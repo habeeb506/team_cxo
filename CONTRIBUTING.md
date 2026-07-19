@@ -61,7 +61,7 @@ It then prints a checklist of the small, fixed set of existing "registry" files 
 7. `frontend/src/api/services/index.js` — add the API service's export
 8. `frontend/src/constants/routePaths.js` — add `tasks: '/tasks'`
 9. `frontend/src/routes/routeConfig.js` — import the page, add `{ path: ROUTE_PATHS.tasks, element: TasksPage }` to the routes array (a component reference, not JSX — match the existing entries)
-10. `frontend/src/components/layout/Sidebar.jsx` — add `{ label: 'Tasks', path: ROUTE_PATHS.tasks }` to `NAV_ITEMS`
+10. `frontend/src/components/layout/TopNav.jsx` — add `{ label: 'Tasks', path: ROUTE_PATHS.tasks }` to `NAV_ITEMS`
 11. `frontend/src/constants/quickLinks.js` — point the module's existing tile at `ROUTE_PATHS.tasks` instead of the `ModulePlaceholderPage` default
 
 After wiring the registry files:
@@ -81,7 +81,9 @@ Nine of the eleven planned modules (Floor Leaders, Applications, Tasks, Apprecia
 
 In both cases, `BaseService`/`BaseController` are designed to be extended, not replaced: add the extra method next to the inherited CRUD ones, the same way `CxoPermissionService` overrides `list`/`getById` for its one custom need while everything else stays inherited.
 
-**Read-only resources.** `users`, `news_bulletins`, `tickets`, `tasks`, and `leaderboard` (the Dashboard's backing data) follow this same "don't build UI nobody asked for" principle from the other direction: the scaffold's model/repository/service layering applies, but only `GET` routes are registered — no create/update/delete/import routes exist yet, since only the Dashboard reads them today. If one of these needs a real admin UI later, add the missing validation schemas + routes + a `*.management.config.js`/page the same way any scaffolded resource would, rather than inventing a new pattern.
+**Read-only resources.** `users`, `news_bulletins`, `tickets`, and `leaderboard` (the Dashboard's backing data) follow this same "don't build UI nobody asked for" principle from the other direction: the scaffold's model/repository/service layering applies, but only `GET` routes are registered — no create/update/delete/import routes exist yet, since only the Dashboard reads them today. If one of these needs a real admin UI later, add the missing validation schemas + routes + a `*.management.config.js`/page the same way any scaffolded resource would, rather than inventing a new pattern.
+
+`tasks` is exactly that upgrade path, already done — see `pages/TasksPage.jsx`. It stayed read-only from launch until an admin UI was actually needed; when it was, the fix was the same three additions this section describes for any other read-only resource: `validations/task.schema.js` (create/update schemas), the remaining routes in `routes/v1/task.routes.js` (POST, PATCH, DELETE, `/import`, `/bulk-delete` — `GET` was already there), and `features/tasks/task.management.config.js` + `pages/TasksPage.jsx`. `TaskService.list`/`getById` also gained a `populate('assignedTo')` override (same pattern as `CxoPermissionService`'s `member` populate) so the table shows the assignee's name instead of a raw id. `tickets` hasn't needed this yet, but would follow identically.
 
 ## Adding demo/seed data
 

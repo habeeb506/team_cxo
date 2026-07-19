@@ -10,8 +10,10 @@ const leaderboardService = new LeaderboardService();
 // LeaderboardService.js for why rank is computed, not stored).
 const leaderboardController = {
   // GET /leaderboard/entries?date=YYYY-MM-DD
+  // or  /leaderboard/entries?year=YYYY&month=M (see getEntriesForPeriod)
   getEntries: asyncHandler(async (req, res) => {
-    const result = await leaderboardService.getEntriesForDate(req.query.date);
+    const { date, year, month } = req.query;
+    const result = await leaderboardService.getEntriesForPeriod({ date, year, month });
     sendSuccess(res, HTTP_STATUS.OK, result.entries, { date: result.date });
   }),
 

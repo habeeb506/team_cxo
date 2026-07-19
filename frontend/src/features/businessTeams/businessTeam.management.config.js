@@ -1,10 +1,21 @@
-/** Table columns for the Business Teams management page. */
+const formatDate = (value) => (value ? new Date(value).toLocaleDateString() : '—');
+
+/**
+ * Table columns for the Business Teams management page -- every
+ * business field the `business_teams` document has (see
+ * backend/src/models/BusinessTeam.model.js). Internal-only fields
+ * (isDeleted, deletedAt, createdBy, updatedBy, schemaVersion, metadata)
+ * are left out for the same reason documented on CXO_TEAM_COLUMNS.
+ */
 export const BUSINESS_TEAM_COLUMNS = [
   { key: 'name', header: 'Name' },
   { key: 'emailId', header: 'Email' },
   { key: 'business', header: 'Business' },
-  { key: 'location', header: 'Location' },
-  { key: 'room', header: 'Room' },
+  { key: 'location', header: 'Location', render: (row) => row.location || '—' },
+  { key: 'place', header: 'Place', render: (row) => row.place || '—' },
+  { key: 'room', header: 'Room', render: (row) => row.room || '—' },
+  { key: 'createdAt', header: 'Created', render: (row) => formatDate(row.createdAt) },
+  { key: 'updatedAt', header: 'Updated', render: (row) => formatDate(row.updatedAt) },
 ];
 
 // business/location/room are free-text, not fixed enums, so this page

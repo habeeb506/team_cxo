@@ -1,4 +1,5 @@
 import { parsePaginationQuery } from './pagination.js';
+import { getUtcMonthRange } from './date.js';
 
 /**
  * Escapes regex metacharacters so user-supplied search text is treated
@@ -20,8 +21,16 @@ function escapeRegExp(value) {
  *   ignored, so clients can't filter on arbitrary/unindexed fields.
  * - `search` does a case-insensitive substring match across
  *   `searchableFields` using $or.
+ * - `dateRangeField`, if given, turns an optional `?year=&month=` pair
+ *   on the query string into a `{ $gte, $lt }` range filter on that
+ *   field (month is optional -- year alone matches the whole year).
+ *   Used by resources whose Dashboard widgets offer a Year/Month filter
+ *   (currently tickets and tasks; see getUtcMonthRange in utils/date.js).
  */
-export function buildListQueryOptions(query = {}, { allowedFilters = [], searchableFields = [] } = {}) {
+export function buildListQueryOptions(
+  query = {},
+  { allowedFilters = [], searchableFields = [], dateRangeField } = {},
+) {
   const { page, limit, sort } = parsePaginationQuery(query);
 
   const filter = {};
@@ -35,6 +44,12 @@ export function buildListQueryOptions(query = {}, { allowedFilters = [], searcha
   if (searchableFields.length > 0 && typeof query.search === 'string' && query.search.trim()) {
     const regex = new RegExp(escapeRegExp(query.search.trim()), 'i');
     filter.$or = searchableFields.map((field) => ({ [field]: regex }));
+  }
+
+  if (dateRangeField && query.year !== undefined && query.year !== '') {
+    const month = query.month !== undefined && query.month !== '' ? Number(query.month) : undefined;
+    const { start, end } = getUtcMonthRange(query.year, month);
+    filter[dateRangeField] = { $gte: start, $lt: end };
   }
 
   return { page, limit, sort, filter };

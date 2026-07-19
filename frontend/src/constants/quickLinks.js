@@ -20,8 +20,8 @@ import { moduleRoute, ROUTE_PATHS } from './routePaths.js';
  * adding a new section means adding one entry here, nothing else.
  *
  * `path` defaults to the generic module placeholder route; once a
- * section gets a real page (like Team Hierarchy below), point its
- * `path` there instead.
+ * section gets a real page (like Team Hierarchy and Tasks below),
+ * point its `path` there instead.
  *
  * Every entry below is an extension point for a planned module (Team
  * Hierarchy, Floor Leaders, Applications, Tasks, Appreciations, News
@@ -60,6 +60,7 @@ export const QUICK_LINKS = [
     title: 'Tasks',
     description: 'Track assigned tasks and their progress.',
     icon: CheckSquare,
+    path: ROUTE_PATHS.tasks,
   },
   {
     id: 'appreciations',

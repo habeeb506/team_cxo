@@ -1,6 +1,9 @@
 import ApiService from '../baseApiService.js';
 
-/** Read-only for now (see CONTRIBUTING.md's "Admin UI scope" note). */
+/**
+ * Full CRUD (see pages/TasksPage.jsx) -- inherits create/update/remove/
+ * bulkImport/bulkDelete from ApiService with no overrides needed.
+ */
 class TaskApiService extends ApiService {
   constructor() {
     super('/v1/tasks');

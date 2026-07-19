@@ -30,6 +30,21 @@ class LeaderboardEntryRepository extends BaseRepository {
       .exec();
     return doc?.snapshotDate ?? null;
   }
+
+  /**
+   * The most recent snapshot date within [start, end), or null if no
+   * snapshot falls in that range. Backs the Year/Month filter (see
+   * LeaderboardService.getEntriesForPeriod) -- snapshots are weekly, so
+   * a chosen period may contain zero, one, or several.
+   */
+  async getLatestDateInRange(start, end) {
+    const doc = await this.model
+      .findOne(this.withDeletedFilter({ snapshotDate: { $gte: start, $lt: end } }))
+      .sort('-snapshotDate')
+      .select('snapshotDate')
+      .exec();
+    return doc?.snapshotDate ?? null;
+  }
 }
 
 export default LeaderboardEntryRepository;

@@ -27,6 +27,11 @@ export default function ManagementPage({ title, description, columns, filters = 
   const actionColumn = {
     key: '__actions',
     header: '',
+    // Pinned to the right of the table's scroll area (see
+    // components/ui/DataTable.jsx) so View/Edit/Delete stay reachable
+    // even when a resource has enough columns to need horizontal
+    // scrolling (e.g. Team Members, Business Teams).
+    sticky: 'right',
     render: (row) => (
       <div className="flex justify-end gap-2">
         <Button variant="ghost" size="sm" onClick={() => state.openView(row)}>
