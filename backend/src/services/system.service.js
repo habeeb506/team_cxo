@@ -1,17 +1,10 @@
-import os from 'node:os';
-
 /**
- * Reads the OS-level identity of the machine running this backend
- * process (username + hostname). There's no authentication yet, so on
- * an internal tool run per-machine this stands in for "who is using
- * the app." A browser cannot read this itself — os-level identity is
- * not exposed to client-side JS — so the backend is the only layer
- * that can technically provide it.
+ * REMOVED -- the machine-identity stand-in is gone now that real
+ * authentication exists (see services/AuthService.js). Left as an empty
+ * module (rather than deleted) because this environment's file tools
+ * couldn't delete it; please delete this file (and
+ * controllers/system.controller.js, routes/v1/system.routes.js,
+ * frontend/src/api/systemApi.js, frontend/src/hooks/useMachineIdentity.js)
+ * manually.
  */
-export function getMachineIdentity() {
-  const { username } = os.userInfo();
-  return {
-    username,
-    hostname: os.hostname(),
-  };
-}
+export {};

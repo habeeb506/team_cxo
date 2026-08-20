@@ -7,9 +7,9 @@ class UserService extends BaseService {
     super(new UserRepository(), 'User', { uniqueFields: ['email'] });
   }
 
-  /** Users offered in the frontend's mock "logged in as" switcher. */
-  async getDemoAccounts() {
-    return this.repository.findDemoAccounts();
+  /** Looks up a user by email for OTP login (see services/AuthService.js). */
+  async getByEmail(email) {
+    return this.repository.findByEmail(email);
   }
 }
 

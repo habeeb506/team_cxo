@@ -2,6 +2,7 @@ export { default as Button } from './Button.jsx';
 export { default as Input } from './Input.jsx';
 export { default as Select } from './Select.jsx';
 export { default as CheckboxGroup } from './CheckboxGroup.jsx';
+export { default as MultiSelect } from './MultiSelect.jsx';
 export { default as Card } from './Card.jsx';
 export { default as Spinner } from './Spinner.jsx';
 export { default as Alert } from './Alert.jsx';

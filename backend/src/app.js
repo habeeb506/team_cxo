@@ -5,11 +5,18 @@ import helmet from 'helmet';
 
 import config from './config/index.js';
 import errorHandler from './middlewares/errorHandler.js';
+import hostAllowlist from './middlewares/hostAllowlist.middleware.js';
 import notFound from './middlewares/notFound.js';
 import requestLogger from './middlewares/requestLogger.js';
 import routes from './routes/index.js';
 
 const app = express();
+
+// Access gate: only requests to an approved Host header are served at
+// all (see middlewares/hostAllowlist.middleware.js) -- mounted before
+// everything else, including security headers, so a disallowed request
+// is rejected as early as possible.
+app.use(hostAllowlist);
 
 // Security headers
 app.use(helmet());

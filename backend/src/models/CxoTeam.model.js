@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-import { EMAIL_REGEX, TEAM_MEMBER_STATUS } from '../config/constants.js';
+import { EMAIL_REGEX, TEAM_MEMBER_SUPPORT_TYPES } from '../config/constants.js';
 
 import { auditableSchemaPlugin } from './plugins/auditableSchema.plugin.js';
 
@@ -12,6 +12,20 @@ const { Schema } = mongoose;
  * org-chart traversal (direct reports, manager chains) possible
  * without a separate hierarchy table. See ARCHITECTURE.md for the full
  * indexing/relationship rationale.
+ *
+ * By request, this also carries a career/development profile block
+ * (careerLevel, priorExperience, lastPromotionDate, backupTeamMember,
+ * coach, primaryPortfolio/secondaryPortfolio/otherPortfolio,
+ * learningHours, businessChemistry, certificationsPlanned, ceBaseline,
+ * mobile) alongside the pre-existing roster/hierarchy fields -- added on
+ * top of the schema, not a replacement for anything already here.
+ * `firmExperience`, `overallExperience`, and `timeInRole` are
+ * deliberately **not** stored fields -- they're derived from
+ * `joiningDate`/`priorExperience`/`lastPromotionDate` and would go stale
+ * every single day if persisted, so they're computed fresh on every
+ * read instead (see services/CxoTeamService.js's attachExperienceFields
+ * and utils/experience.js), the same pattern TaskService uses for
+ * `completionTimeliness`.
  */
 const cxoTeamSchema = new Schema(
   {
@@ -28,19 +42,30 @@ const cxoTeamSchema = new Schema(
       lowercase: true,
       match: [EMAIL_REGEX, 'Invalid email format'],
     },
+    // Numeric, by request -- previously a free-text string (e.g.
+    // "LEGACY-1005") since not every member has a legacy id at all
+    // (still true; still not `required`).
     empIdOld: {
-      type: String,
-      trim: true,
+      type: Number,
       // legacy id doesn't exist for every member
     },
+    // Numeric, by request -- previously a free-text string (e.g.
+    // "EMP2003").
     empIdNew: {
-      type: String,
+      type: Number,
       required: [true, 'Employee ID is required'],
-      trim: true,
     },
     level: {
       // Free-form on purpose -- org level codes (e.g. L1-L6, bands)
       // vary by company and change independently of this schema.
+      type: String,
+      trim: true,
+    },
+    // Distinct from `level` above (which is an org-hierarchy code like
+    // "L1"-"L4") -- a separate, free-text career/competency band (e.g.
+    // "Senior Manager", "Director"), added alongside the existing
+    // fields on this document rather than replacing `level`.
+    careerLevel: {
       type: String,
       trim: true,
     },
@@ -77,10 +102,98 @@ const cxoTeamSchema = new Schema(
       type: String,
       trim: true,
     },
-    status: {
+    // Years of relevant experience *before* joining this firm --
+    // combined with tenure here (see `joiningDate` below) to compute
+    // `overallExperience` at read time (see services/CxoTeamService.js's
+    // attachExperienceFields) rather than storing a value that would
+    // silently go stale the moment a day passes.
+    priorExperience: {
+      type: Number,
+      min: 0,
+      default: null,
+    },
+    // The date of this person's most recent promotion, if any -- paired
+    // with `timeInRole` (computed from this at read time; falls back to
+    // `joiningDate` for someone who's never been promoted, so "time in
+    // role" always means "time since the current role started").
+    lastPromotionDate: {
+      type: Date,
+      default: null,
+    },
+    backupTeamMember: {
       type: String,
-      enum: TEAM_MEMBER_STATUS,
-      default: 'active',
+      trim: true,
+    },
+    coach: {
+      type: String,
+      trim: true,
+    },
+    primaryPortfolio: {
+      type: String,
+      trim: true,
+    },
+    secondaryPortfolio: {
+      type: String,
+      trim: true,
+    },
+    otherPortfolio: {
+      type: String,
+      trim: true,
+    },
+    learningHours: {
+      type: Number,
+      min: 0,
+      default: null,
+    },
+    businessChemistry: {
+      type: String,
+      trim: true,
+    },
+    certificationsPlanned: {
+      type: String,
+      trim: true,
+    },
+    ceBaseline: {
+      type: String,
+      trim: true,
+    },
+    // Free-form on purpose, like every other contact/identity string on
+    // this document -- phone formats vary too widely (country codes,
+    // extensions) to be worth a fixed pattern.
+    mobile: {
+      type: String,
+      trim: true,
+    },
+    // Free-form on purpose, like `level`/`group` -- shift schedules
+    // (e.g. "9:00 AM to 6:00 PM") vary by team and aren't worth a fixed
+    // enum. This is the person's regular/current shift, kept in sync
+    // with their most recent team_roster_entries row -- see
+    // TeamRosterService.syncCurrentSupport.
+    shift: {
+      type: String,
+      trim: true,
+    },
+    // Daily roster-status value (see TEAM_MEMBER_SUPPORT_TYPES in
+    // config/constants.js: available/training/reconciliation/mfa/dlaunch/
+    // pto/epto/other) -- kept in sync with this person's most recent
+    // team_roster_entries row by TeamRosterService.syncCurrentSupport
+    // every time a roster is uploaded. Defaults to 'available', the
+    // everyday/nothing-special-to-report state. Not directly editable as
+    // a day-to-day fact the way name/designation are, though the Team
+    // Members edit form still allows a manual override for convenience.
+    support: {
+      type: String,
+      enum: TEAM_MEMBER_SUPPORT_TYPES,
+      default: 'available',
+    },
+    // Free-text time range the current `support` assignment applies to
+    // (e.g. "9:00 AM - 1:00 PM"), the same free-form pattern `shift`
+    // uses -- kept in sync with this person's most recent
+    // team_roster_entries row by TeamRosterService.syncCurrentSupport,
+    // same as support/shift.
+    timeSlot: {
+      type: String,
+      trim: true,
     },
     joiningDate: {
       type: Date,

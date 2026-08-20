@@ -65,10 +65,10 @@ function buildSnapshotEntries(users, snapshotDate, random, forcedRankUserId) {
  * Seeds `leaderboard_entries` -- one snapshot per week for the last
  * `SNAPSHOT_COUNT` weeks, across all 100 seeded users, so the
  * Dashboard's Leaderboard date picker has real history to switch
- * between. `primaryDemoUser` is guaranteed rank 7 on the most recent
+ * between. `primaryUser` is guaranteed rank 7 on the most recent
  * (default) snapshot only -- older snapshots vary naturally.
  */
-export async function seedLeaderboard(allUsers, primaryDemoUser) {
+export async function seedLeaderboard(allUsers, primaryUser) {
   const random = makeRandom(2024);
   const today = toUtcDateOnly(new Date());
 
@@ -77,7 +77,7 @@ export async function seedLeaderboard(allUsers, primaryDemoUser) {
     const snapshotDate = new Date(today.getTime() - i * SNAPSHOT_INTERVAL_DAYS * 24 * 60 * 60 * 1000);
     const isLatest = i === 0;
     records.push(
-      ...buildSnapshotEntries(allUsers, snapshotDate, random, isLatest ? primaryDemoUser._id : null),
+      ...buildSnapshotEntries(allUsers, snapshotDate, random, isLatest ? primaryUser._id : null),
     );
   }
 

@@ -1,9 +1,7 @@
-import { createContext } from 'react';
-
 /**
- * The context object lives in its own (non-component) file so
- * CurrentUserContext.jsx can export only the CurrentUserProvider
- * component -- keeps Vite's fast refresh working cleanly for that file
- * (see toastContextInstance.js for the same pattern).
+ * REMOVED -- superseded by context/authContextInstance.js. See
+ * context/CurrentUserContext.jsx's docblock for why this file still
+ * exists as an empty stub instead of being deleted; please delete it
+ * manually.
  */
-export const CurrentUserContext = createContext(null);
+export {};

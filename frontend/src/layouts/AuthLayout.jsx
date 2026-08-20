@@ -1,10 +1,9 @@
 import { Outlet } from 'react-router-dom';
 
 /**
- * Minimal centered shell for unauthenticated pages — login, signup,
- * password reset. No header/sidebar, since a signed-out user hasn't
- * earned the app chrome yet. Currently unused (no auth pages exist),
- * but wired into routeConfig.js so adding /login is a one-line change.
+ * Minimal centered shell for unauthenticated pages — currently just
+ * /login (pages/LoginPage.jsx). No header/sidebar, since a signed-out
+ * user hasn't earned the app chrome yet.
  */
 export default function AuthLayout() {
   return (

@@ -33,7 +33,7 @@ function dedupedFetch(cacheKey, fetcher) {
  *
  * Usage:
  *   const { data, error, isLoading } = useFetch(() => userApi.getAll(), [page]);
- *   const { data } = useFetch(() => systemApi.getIdentity(), [], { cacheKey: 'system/identity', cacheTtlMs: 300000 });
+ *   const { data } = useFetch(() => leaderboardApiService.getDates(), [], { cacheKey: 'leaderboard/dates', cacheTtlMs: 300000 });
  */
 export default function useFetch(fetcher, deps = [], { cacheKey, cacheTtlMs = 0 } = {}) {
   const [data, setData] = useState(null);

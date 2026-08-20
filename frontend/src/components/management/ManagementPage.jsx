@@ -63,6 +63,7 @@ export default function ManagementPage({ title, description, columns, filters = 
           onFilterChange={state.setFilters}
           onAdd={state.openCreate}
           onDownloadTemplate={state.downloadTemplate}
+          downloadTemplateLabel={config.templateLabel}
           onImportFile={state.importFile}
           isImporting={state.isImporting}
           onExport={state.exportCsv}
@@ -102,6 +103,7 @@ export default function ManagementPage({ title, description, columns, filters = 
         resourceLabel={state.resourceLabel}
         onClose={state.closeForm}
         onSubmit={state.handleFormSubmit}
+        className={config.formClassName}
       />
 
       <RecordViewModal

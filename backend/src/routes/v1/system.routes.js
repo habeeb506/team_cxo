@@ -1,9 +1,5 @@
-import { Router } from 'express';
-
-import { getIdentity } from '../../controllers/system.controller.js';
-
-const router = Router();
-
-router.get('/identity', getIdentity);
-
-export default router;
+/**
+ * REMOVED -- see services/system.service.js's docblock. No longer
+ * mounted in routes/v1/index.js. Please delete this file manually.
+ */
+export {};

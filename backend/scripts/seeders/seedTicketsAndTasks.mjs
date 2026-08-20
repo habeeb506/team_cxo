@@ -45,17 +45,17 @@ function pick(array, index) {
 }
 
 /**
- * Seeds `tickets` and `tasks` for every demo-selectable user (20
- * tickets + 10 tasks each), so switching the mock "logged in as" user
- * (see context/CurrentUserContext.jsx on the frontend) always has real
- * Individual Contribution data to show, not just the primary demo user.
+ * Seeds `tickets` and `tasks` for each of the seed script's "activity"
+ * users (20 tickets + 10 tasks each -- see seedUsers.mjs), so logging
+ * into any of those accounts always has real Individual Contribution
+ * data to show.
  */
-export async function seedTicketsAndTasks(demoUsers) {
+export async function seedTicketsAndTasks(activityUsers) {
   const ticketRecords = [];
   const taskRecords = [];
   const now = Date.now();
 
-  demoUsers.forEach((user, userIndex) => {
+  activityUsers.forEach((user, userIndex) => {
     for (let i = 0; i < TICKETS_PER_USER; i++) {
       const status = pick(TICKET_STATUSES, i + userIndex);
       const createdDaysAgo = i * 3 + (userIndex % 5);
@@ -74,13 +74,47 @@ export async function seedTicketsAndTasks(demoUsers) {
 
     for (let i = 0; i < TASKS_PER_USER; i++) {
       const createdDaysAgo = i * 4 + (userIndex % 3);
+      const status = pick(TASK_STATUSES, i + userIndex);
+
+      let dueDate;
+      let completedAt = null;
+
+      if (status === 'done') {
+        // Cycles through on-time / delayed / overdue outcomes so
+        // TaskCompletionBadge (green/yellow/red -- see
+        // backend/src/utils/businessTime.js) has real variety to show
+        // across the seeded roster instead of every done task landing
+        // on the same color. Due date is placed safely in the past
+        // (5-14 days ago) so `completedAt` can be measured against it.
+        const outcome = (i + userIndex) % 3; // 0 on-time, 1 delayed (yellow), 2 overdue (red)
+        const dueDaysAgo = 5 + i;
+        dueDate = new Date(now - dueDaysAgo * 24 * 60 * 60 * 1000);
+
+        if (outcome === 0) {
+          // Finished a few hours before the deadline.
+          completedAt = new Date(dueDate.getTime() - 4 * 60 * 60 * 1000);
+        } else if (outcome === 1) {
+          // Late, but comfortably within the 24-business-hour "delayed" window.
+          completedAt = new Date(dueDate.getTime() + 6 * 60 * 60 * 1000);
+        } else {
+          // Late by several calendar days -- past 24 business hours
+          // even if a weekend/holiday falls in between.
+          completedAt = new Date(dueDate.getTime() + 4 * 24 * 60 * 60 * 1000);
+        }
+      } else {
+        // todo/in-progress tasks stay open -- due date in the future,
+        // so Open Tasks still has real not-yet-due examples to show.
+        dueDate = new Date(now + (TASKS_PER_USER - i) * 2 * 24 * 60 * 60 * 1000);
+      }
+
       taskRecords.push({
         title: pick(TASK_SUBJECTS, i + userIndex),
         description: 'Seed data for local development and testing of the Individual Contribution panel.',
-        status: pick(TASK_STATUSES, i + userIndex),
+        status,
         priority: pick(PRIORITY_LEVELS, i + userIndex * 2),
         assignedTo: user._id,
-        dueDate: new Date(now + (TASKS_PER_USER - i) * 2 * 24 * 60 * 60 * 1000),
+        dueDate,
+        completedAt,
         createdAt: new Date(now - createdDaysAgo * 24 * 60 * 60 * 1000),
       });
     }

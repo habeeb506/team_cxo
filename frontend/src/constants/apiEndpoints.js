@@ -7,5 +7,4 @@ export const API_VERSION = 'v1';
 
 export const API_ENDPOINTS = {
   health: `/${API_VERSION}/health`,
-  systemIdentity: `/${API_VERSION}/system/identity`,
 };

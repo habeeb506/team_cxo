@@ -16,8 +16,7 @@ export const ROUTE_PATHS = {
   // a module gets a real page, point its dashboardCards.js entry at
   // the new route instead of this pattern.
   modulePattern: '/modules/:moduleId',
-  // Future first-class modules register their own paths here, e.g.:
-  // login: '/login',
+  login: '/login',
 };
 
 /** Builds the placeholder route path for a given dashboard card id. */

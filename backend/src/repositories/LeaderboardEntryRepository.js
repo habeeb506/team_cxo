@@ -32,17 +32,24 @@ class LeaderboardEntryRepository extends BaseRepository {
   }
 
   /**
-   * The most recent snapshot date within [start, end), or null if no
-   * snapshot falls in that range. Backs the Year/Month filter (see
-   * LeaderboardService.getEntriesForPeriod) -- snapshots are weekly, so
-   * a chosen period may contain zero, one, or several.
+   * The most recent snapshot date matching the multi-select Year/Month
+   * filter (either/both axes, AND'd together -- see
+   * utils/queryOptions.js's buildListQueryOptions for the same
+   * `$expr`/`$year`/`$month` approach), or null if no snapshot matches.
+   * Backs the Year/Month filter (see LeaderboardService.getEntriesForPeriod)
+   * -- snapshots are weekly, so a chosen period may contain zero, one,
+   * or several.
    */
-  async getLatestDateInRange(start, end) {
-    const doc = await this.model
-      .findOne(this.withDeletedFilter({ snapshotDate: { $gte: start, $lt: end } }))
-      .sort('-snapshotDate')
-      .select('snapshotDate')
-      .exec();
+  async getLatestDateMatching({ years = [], months = [] } = {}) {
+    const exprClauses = [];
+    if (years.length > 0) exprClauses.push({ $in: [{ $year: '$snapshotDate' }, years] });
+    if (months.length > 0) exprClauses.push({ $in: [{ $month: '$snapshotDate' }, months] });
+
+    const filter = this.withDeletedFilter(
+      exprClauses.length > 0 ? { $expr: exprClauses.length > 1 ? { $and: exprClauses } : exprClauses[0] } : {},
+    );
+
+    const doc = await this.model.findOne(filter).sort('-snapshotDate').select('snapshotDate').exec();
     return doc?.snapshotDate ?? null;
   }
 }

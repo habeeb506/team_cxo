@@ -3,17 +3,17 @@ import { BrowserRouter } from 'react-router-dom';
 import AppRoutes from './routes/AppRoutes.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';
 import { ToastProvider } from './context/ToastContext.jsx';
-import { CurrentUserProvider } from './context/CurrentUserContext.jsx';
+import { AuthProvider } from './context/AuthContext.jsx';
 
 export default function App() {
   return (
     <ErrorBoundary>
       <ToastProvider>
-        <CurrentUserProvider>
+        <AuthProvider>
           <BrowserRouter>
             <AppRoutes />
           </BrowserRouter>
-        </CurrentUserProvider>
+        </AuthProvider>
       </ToastProvider>
     </ErrorBoundary>
   );

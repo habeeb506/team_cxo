@@ -7,12 +7,9 @@ class UserRepository extends BaseRepository {
     super(User);
   }
 
-  /** Users offered in the frontend's mock "logged in as" switcher. */
-  findDemoAccounts() {
-    return this.model
-      .find(this.withDeletedFilter({ isDemoAccount: true }))
-      .sort('name')
-      .exec();
+  /** Looks up a user by email for OTP login (see services/AuthService.js). */
+  findByEmail(email) {
+    return this.model.findOne(this.withDeletedFilter({ email })).exec();
   }
 }
 

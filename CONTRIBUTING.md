@@ -57,7 +57,7 @@ It then prints a checklist of the small, fixed set of existing "registry" files 
 3. `backend/src/services/index.js` — add the service's export
 4. `backend/src/controllers/index.js` — add the controller's export
 5. `backend/src/validations/index.js` — add the create/update schema exports
-6. `backend/src/routes/v1/index.js` — import the router, `router.use('/tasks', taskRoutes)`
+6. `backend/src/routes/v1/index.js` — import the router, `router.use('/tasks', requireAuth, taskRoutes)` (every resource router is mounted behind `requireAuth` — see ARCHITECTURE.md's "Authentication" section — so a new one needs it too)
 7. `frontend/src/api/services/index.js` — add the API service's export
 8. `frontend/src/constants/routePaths.js` — add `tasks: '/tasks'`
 9. `frontend/src/routes/routeConfig.js` — import the page, add `{ path: ROUTE_PATHS.tasks, element: TasksPage }` to the routes array (a component reference, not JSX — match the existing entries)
@@ -87,7 +87,7 @@ In both cases, `BaseService`/`BaseController` are designed to be extended, not r
 
 ## Adding demo/seed data
 
-`backend/scripts/seed.mjs` (with helpers in `backend/scripts/seeders/`) populates local MongoDB with dummy data for the Dashboard: `users` (100 total, 20 flagged `isDemoAccount` for the frontend's mock "logged in as" switcher — see ARCHITECTURE.md's "Dashboard and mock identity"), `news_bulletins`, `tickets`/`tasks` per demo user, and `leaderboard_entries` snapshots. Run it with `npm run seed --prefix backend`; it's safe to re-run (every affected collection is cleared first). If you add a new seed-worthy resource, add a `seeders/seedX.mjs` following the same pattern (accepts already-created dependencies as arguments, returns the created documents) and wire it into `seed.mjs`'s `run()`.
+`backend/scripts/seed.mjs` (with helpers in `backend/scripts/seeders/`) populates local MongoDB with dummy data for the Dashboard: `users` (100 total, every one a real email-OTP login — see ARCHITECTURE.md's "Authentication" — with the first 20 getting richer ticket/task history), `news_bulletins`, `tickets`/`tasks` for those 20, and `leaderboard_entries` snapshots. Run it with `npm run seed --prefix backend`; it's safe to re-run (every affected collection is cleared first). The script prints every seeded login-with-history email at the end — `OTP_DEV_MODE=true` (the `.env.example` default) means you don't need real email access to log in as any of them: request an OTP and the code is echoed back in the API response. If you add a new seed-worthy resource, add a `seeders/seedX.mjs` following the same pattern (accepts already-created dependencies as arguments, returns the created documents) and wire it into `seed.mjs`'s `run()`.
 
 ## API standards
 

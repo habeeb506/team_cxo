@@ -24,6 +24,12 @@ import {
   CxoTeam,
   BusinessTeam,
   CxoPermission,
+  Appointment,
+  Voc,
+  ShoutOut,
+  Award,
+  Holiday,
+  TeamRosterEntry,
 } from '../src/models/index.js';
 import { connectDB, disconnectDB } from '../src/config/db.js';
 
@@ -34,6 +40,12 @@ import { seedLeaderboard } from './seeders/seedLeaderboard.mjs';
 import { seedCxoTeams } from './seeders/seedCxoTeams.mjs';
 import { seedBusinessTeams } from './seeders/seedBusinessTeams.mjs';
 import { seedCxoPermissions } from './seeders/seedCxoPermissions.mjs';
+import { seedAppointments } from './seeders/seedAppointments.mjs';
+import { seedVocs } from './seeders/seedVocs.mjs';
+import { seedShoutOuts } from './seeders/seedShoutOuts.mjs';
+import { seedAwards } from './seeders/seedAwards.mjs';
+import { seedHolidays } from './seeders/seedHolidays.mjs';
+import { seedTeamRoster } from './seeders/seedTeamRoster.mjs';
 
 async function clearCollections() {
   await Promise.all([
@@ -45,6 +57,12 @@ async function clearCollections() {
     CxoTeam.deleteMany({}),
     BusinessTeam.deleteMany({}),
     CxoPermission.deleteMany({}),
+    Appointment.deleteMany({}),
+    Voc.deleteMany({}),
+    ShoutOut.deleteMany({}),
+    Award.deleteMany({}),
+    Holiday.deleteMany({}),
+    TeamRosterEntry.deleteMany({}),
   ]);
 }
 
@@ -56,25 +74,29 @@ async function run() {
   await clearCollections();
 
   console.log('Seeding users...');
-  const { allUsers, demoUsers, primaryDemoUser } = await seedUsers();
-  console.log(`  ${allUsers.length} users created (${demoUsers.length} demo accounts).`);
-  console.log(`  Primary demo user (rank 7 on latest leaderboard): ${primaryDemoUser.name} <${primaryDemoUser.email}>`);
+  const { allUsers, activityUsers, primaryUser } = await seedUsers();
+  console.log(`  ${allUsers.length} users created (${activityUsers.length} with rich ticket/task history).`);
+  console.log(`  Primary user (rank 7 on latest leaderboard): ${primaryUser.name} <${primaryUser.email}>`);
 
   console.log('Seeding news bulletins...');
   const bulletins = await seedNewsBulletins();
   console.log(`  ${bulletins.length} news bulletins created.`);
 
   console.log('Seeding tickets and tasks...');
-  const { tickets, tasks } = await seedTicketsAndTasks(demoUsers);
+  const { tickets, tasks } = await seedTicketsAndTasks(activityUsers);
   console.log(`  ${tickets.length} tickets and ${tasks.length} tasks created.`);
 
   console.log('Seeding leaderboard snapshots...');
-  const entries = await seedLeaderboard(allUsers, primaryDemoUser);
+  const entries = await seedLeaderboard(allUsers, primaryUser);
   console.log(`  ${entries.length} leaderboard entries created.`);
 
   console.log('Seeding cxo_teams (leadership hierarchy)...');
   const { all: teamMembers, ceo, directors, managers } = await seedCxoTeams();
   console.log(`  ${teamMembers.length} team members created (1 CEO, ${directors.length} directors, ${managers.length} managers, ${teamMembers.length - 1 - directors.length - managers.length} individual contributors).`);
+
+  console.log('Seeding month-to-date team roster...');
+  const rosterEntries = await seedTeamRoster(teamMembers);
+  console.log(`  ${rosterEntries.length} roster entries created (feeds the Team Members page's roster stats bar).`);
 
   console.log('Seeding business_teams...');
   const businessTeamMembers = await seedBusinessTeams();
@@ -84,8 +106,30 @@ async function run() {
   const permissions = await seedCxoPermissions({ ceo, directors, managers });
   console.log(`  ${permissions.length} permission grants created.`);
 
-  console.log('\nSeed complete. Demo login accounts:');
-  demoUsers.forEach((user) => {
+  console.log('Seeding appointments...');
+  const appointments = await seedAppointments(activityUsers);
+  console.log(`  ${appointments.length} appointments created.`);
+
+  console.log('Seeding VOCs...');
+  const vocs = await seedVocs(activityUsers);
+  console.log(`  ${vocs.length} VOC records created.`);
+
+  console.log('Seeding shout-outs...');
+  const shoutOuts = await seedShoutOuts(activityUsers);
+  console.log(`  ${shoutOuts.length} shout-outs created.`);
+
+  console.log('Seeding awards...');
+  const awards = await seedAwards(activityUsers);
+  console.log(`  ${awards.length} awards created.`);
+
+  console.log('Seeding holiday calendar...');
+  const holidays = await seedHolidays();
+  console.log(`  ${holidays.length} holidays created.`);
+
+  console.log('\nSeed complete. Every seeded user can log in via email OTP (POST /api/v1/auth/request-otp).');
+  console.log('OTP_DEV_MODE is on by default -- the code is logged here and echoed in the API response, no real email needed.');
+  console.log('Accounts with ticket/task history to explore on the Dashboard:');
+  activityUsers.forEach((user) => {
     console.log(`  ${user.email} (${user.role}) -- ${user.name}`);
   });
 

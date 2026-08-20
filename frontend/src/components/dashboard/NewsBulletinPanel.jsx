@@ -47,7 +47,7 @@ export default function NewsBulletinPanel() {
       {!isLoading && !error && items.length === 0 && <EmptyState title="No news yet" />}
 
       {!isLoading && items.length > 0 && (
-        <div onScroll={handleScroll} className="max-h-[520px] space-y-4 overflow-y-auto pr-1">
+        <div onScroll={handleScroll} className="max-h-[130px] space-y-4 overflow-y-auto pr-1">
           {items.map((bulletin) => (
             <article key={bulletin._id} className="border-b border-slate-100 pb-3 last:border-0">
               <p className="text-xs font-medium text-slate-400">{formatDateTime(bulletin.publishedAt)}</p>

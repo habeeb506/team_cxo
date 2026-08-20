@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import Card from '../ui/Card.jsx';
 import DataTable from '../ui/DataTable.jsx';
 import useFetch from '../../hooks/useFetch.js';
-import useCurrentUser from '../../hooks/useCurrentUser.js';
+import useAuth from '../../hooks/useAuth.js';
 import useYearMonthFilter from '../../hooks/useYearMonthFilter.js';
 import leaderboardApiService from '../../api/services/leaderboardApiService.js';
 import { formatDateOnly } from '../../utils/formatDate.js';
@@ -22,11 +22,11 @@ const COLUMNS = [
       </div>
     ),
   },
-  { key: 'tasksCompleted', header: 'Tasks' },
   { key: 'ticketsResolved', header: 'Tickets' },
+  { key: 'tasksCompleted', header: 'Tasks' },
   { key: 'vocCount', header: 'VOCs' },
   { key: 'shoutOuts', header: 'Shout-outs' },
-  { key: 'recognitions', header: 'Recognitions' },
+  { key: 'recognitions', header: 'Awards' },
   { key: 'overallScore', header: 'Score' },
 ];
 
@@ -37,15 +37,31 @@ const COLUMNS = [
  * but the API response (see backend/src/services/LeaderboardService.js)
  * -- this component just renders it.
  *
- * Filtered by the shared Year/Month control (see
+ * Metric columns (Tickets/Tasks/VOCs/Shout-outs/Awards) are ordered to
+ * match IndividualContributionPanel.jsx's tab order (Appointments,
+ * Tickets, Tasks, VOCs, Shout-outs, Awards) for the metrics the two
+ * widgets share -- Appointments has no leaderboard equivalent (nothing
+ * in `LeaderboardEntry.model.js` scores it), so it's simply absent
+ * here rather than skipped-with-a-gap. `recognitions` is the backend
+ * field name (see LeaderboardEntry.model.js and Award.model.js's
+ * docblock for how it's rolled up from `awards`) but is labeled
+ * "Awards" here to read the same as the IC tab it corresponds to.
+ *
+ * Filtered by the shared multi-select Year/Month control (see
  * hooks/useYearMonthFilter.js) rather than a specific-date picker --
  * the backend resolves whichever weekly snapshot is most recent within
- * that period (LeaderboardService.getEntriesForPeriod). No year/month
- * selected falls back to the latest snapshot overall.
+ * that selection (LeaderboardService.getEntriesForPeriod). No
+ * years/months selected falls back to the latest snapshot overall.
+ *
+ * "Me" for the highlight/auto-scroll below comes from the real,
+ * verified session (useAuth) -- not anything the client could tamper
+ * with -- though note the ranking data itself was never at risk here:
+ * every entry's rank always came from the API response, never from
+ * anything the client computed or supplied.
  */
 export default function LeaderboardPanel() {
-  const { currentUser } = useCurrentUser();
-  const { year, month, setYear, setMonth, params } = useYearMonthFilter();
+  const { user: currentUser } = useAuth();
+  const { years, months, setYears, setMonths, params } = useYearMonthFilter();
   const rowElementsRef = useRef({});
   const listContainerRef = useRef(null);
 
@@ -82,17 +98,17 @@ export default function LeaderboardPanel() {
     <Card
       title="Leaderboard"
       className="flex h-full flex-col"
-      actions={<YearMonthFilter year={year} month={month} onYearChange={setYear} onMonthChange={setMonth} />}
+      actions={<YearMonthFilter years={years} months={months} onYearsChange={setYears} onMonthsChange={setMonths} />}
     >
       {resolvedDate && (
         <p className="mb-2 text-xs text-slate-500">Showing snapshot from {formatDateOnly(resolvedDate)}</p>
       )}
 
-      {!isLoading && !resolvedDate && (year || month) && (
+      {!isLoading && !resolvedDate && (years.length > 0 || months.length > 0) && (
         <p className="mb-2 text-xs text-slate-500">No snapshot found for the selected period.</p>
       )}
 
-      <div ref={listContainerRef} className="max-h-[640px] overflow-y-auto">
+      <div ref={listContainerRef} className="max-h-[320px] overflow-y-auto">
         <DataTable
           columns={COLUMNS}
           rows={entries}

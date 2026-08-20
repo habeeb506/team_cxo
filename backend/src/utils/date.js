@@ -15,21 +15,34 @@ export function formatUtcDateOnly(date) {
   return new Date(date).toISOString().slice(0, 10);
 }
 
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
 /**
- * Returns the [start, end) UTC Date range for one calendar month (when
- * `month` is a 1-12 number) or, if `month` is omitted, one whole
- * calendar year. Used to turn a `?year=&month=` dashboard filter into a
- * single Mongo range query ($gte start, $lt end) against a timestamp
- * field -- see utils/queryOptions.js's `dateRangeField` option.
+ * Resolves a 'day' | 'week' | 'month' period (containing `dateInput`,
+ * default today) into a `[start, end)` UTC date range -- used by
+ * TeamRosterService.getStats for the roster stats bar's Day/Week/Month
+ * scope. `end` is exclusive, so callers filter with `{ $gte: start, $lt: end }`.
+ * 'week' is Monday-Sunday (ISO week), not a rolling "last 7 days".
  */
-export function getUtcMonthRange(year, month) {
-  const y = Number(year);
-  if (typeof month === 'number' && !Number.isNaN(month)) {
-    const start = new Date(Date.UTC(y, month - 1, 1));
-    const end = new Date(Date.UTC(y, month, 1));
+export function resolvePeriodRange(period, dateInput) {
+  const anchor = toUtcDateOnly(dateInput ?? new Date());
+
+  if (period === 'week') {
+    // getUTCDay(): 0=Sun..6=Sat. Days since the most recent Monday.
+    const daysSinceMonday = (anchor.getUTCDay() + 6) % 7;
+    const start = new Date(anchor.getTime() - daysSinceMonday * MS_PER_DAY);
+    const end = new Date(start.getTime() + 7 * MS_PER_DAY);
     return { start, end };
   }
-  const start = new Date(Date.UTC(y, 0, 1));
-  const end = new Date(Date.UTC(y + 1, 0, 1));
+
+  if (period === 'month') {
+    const start = new Date(Date.UTC(anchor.getUTCFullYear(), anchor.getUTCMonth(), 1));
+    const end = new Date(Date.UTC(anchor.getUTCFullYear(), anchor.getUTCMonth() + 1, 1));
+    return { start, end };
+  }
+
+  // 'day' (default)
+  const start = anchor;
+  const end = new Date(start.getTime() + MS_PER_DAY);
   return { start, end };
 }

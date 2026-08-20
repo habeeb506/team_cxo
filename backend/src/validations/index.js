@@ -11,8 +11,10 @@ export { dateQuerySchema } from './common/dateQuery.schema.js';
 // Optional ?year=YYYY&month=M query shape, `.extend()`-ed into a
 // resource's own list-query schema (tickets, tasks, leaderboard).
 export { yearMonthQueryShape } from './common/yearMonthQuery.schema.js';
+export { requestOtpSchema, verifyOtpSchema } from './auth.schema.js';
 export { taskBodySchema, createTaskSchema, updateTaskSchema } from './task.schema.js';
 export { createCxoTeamSchema, updateCxoTeamSchema } from './cxoTeam.schema.js';
+export { teamRosterImportSchema, teamRosterStatsQuerySchema, teamRosterScheduleQuerySchema } from './teamRoster.schema.js';
 export { createCxoPermissionSchema, updateCxoPermissionSchema } from './cxoPermission.schema.js';
 export { createBusinessTeamSchema, updateBusinessTeamSchema } from './businessTeam.schema.js';
 

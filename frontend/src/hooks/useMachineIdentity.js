@@ -1,22 +1,11 @@
-import useFetch from './useFetch.js';
-import { getMachineIdentity } from '../api/systemApi.js';
-
-const CACHE_KEY = 'system/identity';
-// The OS user/host running the backend process doesn't change during a
-// session, so a long TTL is safe -- this is what lets any future second
-// consumer of this hook share a single request with Header instead of
-// firing its own (see useFetch's in-flight de-duplication + TTL cache).
-const CACHE_TTL_MS = 5 * 60 * 1000;
-
 /**
- * Resolves the OS username/hostname of the machine running the
- * backend (see backend/src/services/system.service.js). Used by the
- * Header chip.
+ * REMOVED -- the machine-identity stand-in (OS user running the
+ * backend process) is gone now that real authentication exists (see
+ * hooks/useAuth.js, components/layout/Header.jsx). See
+ * context/CurrentUserContext.jsx's docblock for why this file still
+ * exists as an empty stub instead of being deleted; please delete it
+ * (and api/systemApi.js, backend/src/routes/v1/system.routes.js,
+ * backend/src/controllers/system.controller.js,
+ * backend/src/services/system.service.js) manually.
  */
-export default function useMachineIdentity() {
-  const { data, error, isLoading } = useFetch(() => getMachineIdentity(), [], {
-    cacheKey: CACHE_KEY,
-    cacheTtlMs: CACHE_TTL_MS,
-  });
-  return { identity: data, error, isLoading };
-}
+export {};

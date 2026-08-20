@@ -1,7 +1,5 @@
-import httpClient from './httpClient.js';
-import { API_ENDPOINTS } from '../constants/apiEndpoints.js';
-
-export async function getMachineIdentity() {
-  const { data } = await httpClient.get(API_ENDPOINTS.systemIdentity);
-  return data;
-}
+/**
+ * REMOVED -- see hooks/useMachineIdentity.js's docblock. Please delete
+ * this file manually.
+ */
+export {};

@@ -1,14 +1,25 @@
+import { createElement } from 'react';
+
+import TaskCompletionBadge from './TaskCompletionBadge.jsx';
 import { TASK_STATUS_OPTIONS, TASK_PRIORITY_OPTIONS } from './task.constants.js';
 
 const formatDate = (value) => (value ? new Date(value).toLocaleDateString() : '—');
-const statusLabel = (value) => TASK_STATUS_OPTIONS.find((option) => option.value === value)?.label || value;
 const priorityLabel = (value) => TASK_PRIORITY_OPTIONS.find((option) => option.value === value)?.label || value;
 
-/** Table columns for the Tasks management page. */
+/**
+ * Table columns for the Tasks management page. Status is colored
+ * green/yellow/red for done tasks via TaskCompletionBadge -- see that
+ * component's docblock for how `completionTimeliness` is computed
+ * server-side and what each color means. This file stays a plain .js
+ * module (like every other `*.management.config.js`), so the one JSX
+ * element needed here is built with `createElement` instead of JSX
+ * syntax, which Vite's default esbuild config only transforms for
+ * .jsx/.tsx files.
+ */
 export const TASK_COLUMNS = [
   { key: 'title', header: 'Title' },
   { key: 'assignedTo', header: 'Assigned To', render: (row) => row.assignedTo?.name || '—' },
-  { key: 'status', header: 'Status', render: (row) => statusLabel(row.status) },
+  { key: 'status', header: 'Status', render: (row) => createElement(TaskCompletionBadge, { task: row }) },
   { key: 'priority', header: 'Priority', render: (row) => priorityLabel(row.priority) },
   { key: 'dueDate', header: 'Due Date', render: (row) => formatDate(row.dueDate) },
   { key: 'createdAt', header: 'Created', render: (row) => formatDate(row.createdAt) },

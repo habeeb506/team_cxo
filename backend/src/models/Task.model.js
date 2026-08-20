@@ -48,6 +48,16 @@ const taskSchema = new Schema(
       type: Date,
       default: null,
     },
+    // Server-set only -- never accepted directly from client input (see
+    // TaskService.update's override, which stamps this with the system
+    // date/time whenever `status` transitions to 'done', and clears it
+    // otherwise). Exists so "when was this actually finished" is a fact
+    // the server owns, the same trust boundary this app already applies
+    // to `assignedTo` on the `/mine` endpoints.
+    completedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true },
 );

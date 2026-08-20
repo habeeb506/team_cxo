@@ -17,5 +17,9 @@ const ticketListQuerySchema = z.object({
 // GET only -- see CONTRIBUTING.md's "Admin UI scope" note. Callers
 // scope to a person via ?assignedTo=<userId>.
 router.get('/', validateRequest(ticketListQuerySchema), ticketController.getAll);
+// Scoped server-side to the authenticated session -- see
+// ticket.controller.js's getMine docblock for why this exists
+// alongside the general GET /.
+router.get('/mine', validateRequest(ticketListQuerySchema), ticketController.getMine);
 
 export default router;

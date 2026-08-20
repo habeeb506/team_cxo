@@ -6,8 +6,6 @@ import { objectIdParamSchema, paginationQuerySchema } from '../../validations/in
 
 const router = Router();
 
-// Registered before /:id so "demo-accounts" is never parsed as an id.
-router.get('/demo-accounts', userController.getDemoAccounts);
 router.get('/', validateRequest(paginationQuerySchema), userController.getAll);
 router.get('/:id', validateRequest(objectIdParamSchema), userController.getById);
 

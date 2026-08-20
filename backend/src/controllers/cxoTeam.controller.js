@@ -4,9 +4,9 @@ import { createCrudController } from './baseController.js';
 
 const cxoTeamService = new CxoTeamService();
 
-// GET /cxo-teams?status=active&group=Engineering&search=jane
+// GET /cxo-teams?support=training&group=Engineering&search=jane
 const cxoTeamController = createCrudController(cxoTeamService, {
-  allowedFilters: ['status', 'group', 'level', 'location', 'lead', 'manager'],
+  allowedFilters: ['support', 'group', 'level', 'location', 'lead', 'manager'],
   searchableFields: ['name', 'designation', 'emailId'],
 });
 

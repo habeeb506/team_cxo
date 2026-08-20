@@ -1,5 +1,6 @@
 import LeaderboardEntryRepository from '../repositories/LeaderboardEntryRepository.js';
-import { formatUtcDateOnly, getUtcMonthRange, toUtcDateOnly } from '../utils/date.js';
+import { formatUtcDateOnly, toUtcDateOnly } from '../utils/date.js';
+import { parseCsvIntList } from '../utils/queryOptions.js';
 
 import BaseService from './BaseService.js';
 
@@ -35,20 +36,26 @@ class LeaderboardService extends BaseService {
   }
 
   /**
-   * Entries for the Dashboard's Year/Month filter (see
+   * Entries for the Dashboard's multi-select Year/Month filter (see
    * components/dashboard/YearMonthFilter.jsx on the frontend): a
    * specific `date` wins if given (unchanged point-in-time behavior),
-   * otherwise `year` (optionally narrowed by `month`) resolves to that
-   * period's most recent snapshot. No filter at all falls back to the
-   * latest snapshot overall, same as getEntriesForDate(undefined).
+   * otherwise `years`/`months` (each an optional comma-separated list,
+   * either/both given -- see validations/common/yearMonthQuery.schema.js)
+   * resolve to that selection's most recent snapshot. No filter at all
+   * falls back to the latest snapshot overall, same as
+   * getEntriesForDate(undefined).
    */
-  async getEntriesForPeriod({ date, year, month } = {}) {
+  async getEntriesForPeriod({ date, years, months } = {}) {
     if (date) return this.getEntriesForDate(date);
 
-    if (year) {
-      const monthNumber = month !== undefined && month !== '' ? Number(month) : undefined;
-      const { start, end } = getUtcMonthRange(year, monthNumber);
-      const snapshotDate = await this.repository.getLatestDateInRange(start, end);
+    const yearsList = parseCsvIntList(years);
+    const monthsList = parseCsvIntList(months);
+
+    if (yearsList.length > 0 || monthsList.length > 0) {
+      const snapshotDate = await this.repository.getLatestDateMatching({
+        years: yearsList,
+        months: monthsList,
+      });
       if (!snapshotDate) return { date: null, entries: [] };
       return this.getEntriesForDate(snapshotDate);
     }

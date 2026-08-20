@@ -26,6 +26,7 @@ export default function ManagementToolbar({
   onFilterChange,
   onAdd,
   onDownloadTemplate,
+  downloadTemplateLabel = 'Download Template',
   onImportFile,
   isImporting,
   onExport,
@@ -83,7 +84,7 @@ export default function ManagementToolbar({
             </Button>
           )}
           <Button variant="secondary" size="sm" onClick={onDownloadTemplate}>
-            Download Template
+            {downloadTemplateLabel}
           </Button>
           <Button variant="secondary" size="sm" isLoading={isExporting} onClick={onExport}>
             Export CSV

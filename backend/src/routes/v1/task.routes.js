@@ -25,6 +25,10 @@ const taskListQuerySchema = z.object({
 // Full CRUD (see pages/TasksPage.jsx) -- callers scope the list to one
 // person via ?assignedTo=<userId>, same as before.
 router.get('/', validateRequest(taskListQuerySchema), taskController.getAll);
+// Registered before /:id so "mine" is never parsed as an id. Scoped
+// server-side to the authenticated session -- see task.controller.js's
+// getMine docblock for why this exists alongside the general GET /.
+router.get('/mine', validateRequest(taskListQuerySchema), taskController.getMine);
 router.post('/import', validateRequest(bulkImportSchema), taskController.bulkImport);
 router.post('/bulk-delete', validateRequest(bulkDeleteSchema), taskController.bulkRemove);
 router.get('/:id', validateRequest(objectIdParamSchema), taskController.getById);

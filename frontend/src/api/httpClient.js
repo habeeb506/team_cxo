@@ -6,7 +6,7 @@ import axios from 'axios';
  * this instead of creating their own axios instances, so base URL,
  * headers, and interceptors stay consistent.
  */
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 
 const httpClient = axios.create({
   // Every backend route is mounted under /api (see backend/src/app.js),
